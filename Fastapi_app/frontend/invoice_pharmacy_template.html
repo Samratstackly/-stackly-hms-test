@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Pharmacy Invoice - Stacklycare</title>
+
+<style>
+
+@page { size: A4; margin: 0; }
+html, body { margin: 0; padding: 0; }
+@font-face {
+    font-family: "Inter";
+    src: url("fonts/Inter-Regular.ttf") format("truetype");
+    font-weight: normal;
+}
+
+@font-face {
+    font-family: "Inter";
+    src: url("fonts/Inter-Bold.ttf") format("truetype");
+    font-weight: bold;
+}
+:root {
+    --green: #045C32;
+    --green-mid: #0AA45F;
+    --green-light: #E8FFF3;
+    --green-grad2: #58D7A3;
+    --border-gray: #CFCFCF;
+    --font-main: "Inter", sans-serif;
+}
+
+body {
+    font-family: var(--font-main);
+    background: white;
+    color: #000;
+}
+
+/* ================================
+   FIXED A4 PAGE HEIGHT
+   ================================ */
+.a4 {
+    width: 794px;
+    height: 1123px; /* Fixed A4 Height */
+    position: relative;
+    margin: 0 auto;
+    background: white;
+    box-sizing: border-box;
+    page-break-after: always;
+    overflow: hidden; 
+}
+.a4:last-child {
+    page-break-after: auto;
+}
+
+/* ================================
+   WATERMARK (CENTER OF PAGE)
+   ================================ */
+.a4::before {
+    content: "";
+    position: absolute;
+    top: 15%;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    /* Centered Watermark */
+    background: url("images/stackly_logo.png") no-repeat center center;
+    background-size: 450px;
+    opacity: 0.28;
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Reserve space above footer so content doesn’t go under it */
+.page-inner {
+    min-height: 100%;
+    box-sizing: border-box;
+    padding-bottom: 120px; /* ≈ footer height */
+    position: relative;
+    z-index: 2; /* Content sits above watermark */
+}
+
+/* ==========================================================
+   HEADER
+   ========================================================== */
+
+.header-wrapper {
+    display: grid;
+    grid-template-columns: 340px auto;
+    width: 100%;
+    position: relative;
+}
+
+/* LEFT BRAND BLOCK */
+.header-left {
+    background: var(--green);
+    color: white;
+    padding: 32px 28px 36px 28px;
+    border-radius: 0 0 40px 0;
+    border-bottom: 4px solid white;
+    border-right: 4px solid rgb(10, 94, 26);
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.header-left img {
+    width: 68px;
+    height: auto;
+    margin-top: 6px;
+}
+
+.header-left-title {
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 4px;
+    line-height: 1.15;        /* FIX: prevents letter overlap */
+    letter-spacing: 0.5px; 
+}
+
+.header-left-address {
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.header-contact-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+    font-size: 11.5px;
+}
+
+.header-contact-row img {
+    width: 13px;
+}
+
+/* RIGHT RIBBON */
+.header-right {
+    position: relative;
+}
+
+.ribbon {
+    background: var(--green);
+    height: 35px;
+    width: 100%;
+    position: relative;
+    margin-bottom: 10px;
+}
+
+.ribbon::after {
+    content: "";
+    position: absolute;
+    right: 0;
+    top: 0;
+    width: 70px;
+    height: 65px;
+    background: var(--green);
+    clip-path: polygon(0 0, 100% 50%, 0 100%);
+}
+
+/* INVOICE TITLE */
+.invoice-title {
+    text-align: center;
+    margin-top: 10px;
+}
+
+.invoice-title div {
+    font-size: 38px;
+    font-weight: 900;
+    color: var(--green-mid);
+    text-decoration: underline;
+    letter-spacing: 3px;
+}
+
+/* Invoice Info Table */
+.invoice-info {
+    margin-top: 8px;
+    width: 72%;
+    margin-left: auto;
+    margin-right: auto;
+    font-size: 13px;
+}
+
+.invoice-info td {
+    padding: 3px 4px;
+    color: black;
+    font-weight: 600;
+}
+
+.invoice-info .label { text-align: left; }
+.invoice-info .value {
+    text-align: right;
+    font-weight: 800;
+}
+
+/* ==========================================================
+   PATIENT DETAILS BOX
+   ========================================================== */
+
+.patient-box {
+    margin: 12px 22px 0 22px;
+    border: 2px solid var(--green-mid);
+    border-top: none;
+    border-radius: 0 0 10px 10px;
+    /* Semi-transparent white so watermark shows through slightly */
+    background: rgba(255, 255, 255, 0.85); 
+}
+
+.patient-row {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    background: var(--green-light);
+    border-top: 6px solid var(--green-mid);
+}
+
+.patient-cell {
+    padding: 8px 10px;
+    border-right: 1px solid #CFE8D8;
+}
+
+.patient-cell:last-child { border-right: none; }
+
+.patient-label {
+    color: var(--green-mid);
+    font-weight: 800;
+    font-size: 12px;
+}
+
+.patient-value {
+    font-weight: 600;
+    font-size: 11px;
+}
+
+/* ==========================================================
+   MEDICINE TITLE 
+   ========================================================== */
+
+.med-title-wrap {
+    text-align: center;
+    margin-top: 18px;
+}
+
+.med-title {
+    background: linear-gradient(90deg,#179258);
+    color: #f9fffd;
+    padding: 7px 36px;
+    display: inline-block;
+    font-size: 15px;
+    font-weight: 900;
+    border-radius: 12px;
+    letter-spacing: 1px;
+    box-shadow: 0px 3px 8px rgba(62, 75, 49, 0.1);
+}
+
+.med-title-small {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--green);
+}
+
+/* ==========================================================
+   MEDICINE TABLE 
+   ========================================================== */
+
+.table-wrapper {
+    margin: 12px 22px 0 22px;
+    border: 1.5px solid var(--green-mid);
+    border-radius: 6px;
+    overflow: hidden;
+    position: relative;
+    /* Semi-transparent white background */
+    background: rgba(255, 255, 255, 0.6); 
+}
+
+/* MAIN TABLE */
+.medicine-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+    position: relative;
+    z-index: 5;
+}
+
+/* COLUMN WIDTHS */
+.medicine-table th:nth-child(1),
+.medicine-table td:nth-child(1) { width: 8%; }
+
+.medicine-table th:nth-child(2),
+.medicine-table td:nth-child(2) { width: 13%; }
+
+.medicine-table th:nth-child(3),
+.medicine-table td:nth-child(3) { width: 42%; }
+
+.medicine-table th:nth-child(4),
+.medicine-table td:nth-child(4) { width: 13%; }
+
+.medicine-table th:nth-child(5),
+.medicine-table td:nth-child(5) {
+    width: 14%;
+    text-align: right;
+    padding-right: 8px;
+}
+
+/* HEADER */
+.medicine-table thead {
+    background: linear-gradient(90deg,#179258);
+    color: white;
+}
+
+.medicine-table th {
+    padding: 6px 3px;
+    font-weight: 900;
+    font-size: 11px;
+    text-align: center;
+    border-right: 1px solid rgba(255,255,255,0.35);
+}
+.medicine-table th:last-child { border-right: none; }
+
+/* BODY ROWS */
+.medicine-table tbody tr {
+    background: transparent;
+}
+
+.medicine-table td {
+    padding: 9px 6px;
+    border-bottom: 1px solid #D8EEDB;
+    border-right: 1px solid #D8EEDB;
+    vertical-align: middle;
+}
+.medicine-table td:last-child { border-right: none; }
+
+.item-name {
+    font-size: 11px;
+    font-weight: 700;
+    color: #067a40;
+}
+.item-sub {
+    font-size: 8.5px;
+    color: #8c8f4a;
+}
+
+.col-center,
+.col-right {
+    font-size: 11px;
+    font-weight: 700;
+}
+
+.col-center { text-align: center; }
+.col-right  { text-align: right; }
+.col-left   { text-align: left; }
+
+/* ==========================================================
+   TOTAL SECTION — ONLY LAST PAGE
+   ========================================================== */
+
+/* UPDATED: White background with transparency 
+*/
+.amount-bar {
+    margin: 10px 22px 0 22px;
+    /* Was --green-light, now White Transparent */
+    /* background: rgba(255, 255, 255, 0.85);  */
+    border-left: 6px solid var(--green-mid);
+    padding: 7px 12px;
+    font-size: 12px;
+    font-weight: 900;
+    color: #1cb80e;
+    border-radius: 4px;
+}
+
+.totals-container {
+    width: 260px;
+    margin: 12px 22px 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.total-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.total-line .label {
+    font-size: 12.5px;
+    font-weight: 800;
+    color: var(--green);
+}
+
+.total-line .value {
+    font-size: 12.5px;
+    font-weight: 900;
+    text-align: right;
+}
+
+/* GRAND TOTAL PILL */
+.grand-total-wrap {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 8px;
+    padding-right: 22px;
+}
+
+.grand-pill {
+    background: linear-gradient(90deg,#179258);
+    border-radius: 50px;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    min-width: 260px;
+    box-shadow: 0px 3px 8px rgba(0,0,0,0.15);
+}
+
+.grand-pill-left {
+    padding: 8px 20px;
+    color: white;
+    font-size: 16px;
+    font-weight: 900;
+    position: relative;
+}
+
+.grand-pill-left::after {
+    content: "";
+    position: absolute;
+    right: -2px;
+    top: 0;
+    width: 4px;
+    height: 100%;
+    background: rgba(129, 7, 7, 0.4);
+    transform: skew(-18deg);
+}
+
+.grand-pill-right {
+    padding: 8px 22px;
+    color: white;
+    font-weight: 900;
+    font-size: 17px;
+    text-align: right;
+}
+
+/* UPDATED: Generated Info Box 
+   White background with transparency
+*/
+.generated-box {
+    width: 86%;
+    margin: 16px auto 0 auto;
+    border: 1px solid #C9C9C9;
+    padding: 9px 12px;
+    border-radius: 10px;
+    text-align: center;
+    font-size: 11.5px;
+    font-weight: 600;
+    /* Was #FBFBFB, now White Transparent */
+    /* background: rgba(255, 255, 255, 0.85); */
+    line-height: 1.40;
+}
+
+/* FOOTER STRIP */
+.footer-strip {
+    width: 100%;
+    height: 70px;
+    background: var(--green);
+    color: white;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    text-align: center;
+    align-items: center;
+    font-size: 13.5px;
+    font-weight: 700;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    z-index: 10;
+}
+
+.footer-strip div {
+    border-right: 1px solid rgba(255,255,255,0.45);
+}
+.footer-strip div:last-child {
+    border-right: none;
+}
+@media print {
+    .header-left-title {
+        line-height: 1.25;
+    }
+}
+</style>
+</head>
+
+<body>
+
+{# =========================================
+   PAGINATION LOGIC
+   ========================================= #}
+
+{% set first_page_size = 15 %}
+{% set next_page_size = 21 %}
+{% set total_items = items|length %}
+
+{# ---------- FIRST PAGE (ALWAYS EXISTS) ---------- #}
+<div class="a4">
+  <div class="page-inner">
+
+    <div class="header-wrapper">
+
+        <div class="header-left">
+            <img src="images/stackly_logo.png" alt="logo">
+
+            <div>
+                <div class="header-left-title">Stacklycare</div>
+
+                <div class="header-left-address">
+                    5th street cross cut road,<br>
+                    New city of Newyork,<br>
+                    USA
+                </div>
+
+                <div class="header-contact-row">
+                    <img src="images/mail.png"> Stacklycare@gmail.com
+                </div>
+
+                <div class="header-contact-row">
+                    <img src="images/logo_phone.png"> +1-7856-4327-7896
+                </div>
+            </div>
+        </div>
+
+        <div class="header-right">
+
+            <div class="ribbon"></div>
+
+            <div class="invoice-title">
+                <div>INVOICE</div>
+            </div>
+
+            <table class="invoice-info">
+                <tr>
+                    <td class="label">Invoice number:</td>
+                    <td class="value">#{{ invoice.bill_no }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Invoice Date:</td>
+                    <td class="value">{{ invoice.bill_date.strftime("%d-%m-%Y") }}</td>
+                </tr>
+                <tr>
+                    <td class="label">Phone number:</td>
+                    <td class="value">+123 456 7890</td>
+                </tr>
+                <tr>
+                    <td class="label">Email ID:</td>
+                    <td class="value">Stacklycare@gmail.com</td>
+                </tr>
+            </table>
+
+        </div>
+    </div>
+
+    <div class="patient-box">
+        <div class="patient-row">
+
+            <div class="patient-cell">
+                <div class="patient-label">Patient Name</div>
+                <div class="patient-value">{{ invoice.patient_name }}</div>
+            </div>
+
+            <div class="patient-cell">
+                <div class="patient-label">Patient ID</div>
+                <div class="patient-value">{{ invoice.patient_id }}</div>
+            </div>
+
+            <div class="patient-cell">
+                <div class="patient-label">Date</div>
+                <div class="patient-value">{{ invoice.bill_date.strftime("%d-%m-%Y") }}</div>
+            </div>
+
+            <div class="patient-cell">
+                <div class="patient-label">Doctor</div>
+                <div class="patient-value">Dr. {{ invoice.doctor_name }}</div>
+            </div>
+
+            <div class="patient-cell">
+                <div class="patient-label">Department</div>
+                <div class="patient-value">{{ invoice.patient_type }}</div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="med-title-wrap">
+        <div class="med-title">Medicine &amp; Drugs</div>
+    </div>
+
+    {# -------- FIRST PAGE TABLE (items 1..15 or all if <=15) -------- #}
+    {% set first_page_items = items[:first_page_size] %}
+
+    <div class="table-wrapper">
+        <table class="medicine-table">
+
+            <thead>
+            <tr>
+                <th>S.no</th>
+                <th>Item Code</th>
+                <th>Descriptions</th>
+                <th>Quantity</th>
+                <th>Unit price</th>
+                <th>Total</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            {% for item in first_page_items %}
+            <tr>
+                <td class="col-center">{{ loop.index }}</td>
+                <td class="col-center">{{ item.item_code }}</td>
+
+                <td class="col-left">
+                    <div class="item-name">{{ item.drug_name }}</div>
+                </td>
+
+                <td class="col-center">{{ item.quantity }}</td>
+                <td class="col-right">{{ "%.2f"|format(item.unit_price) }}</td>
+                <td class="col-right">{{ "%.2f"|format(item.line_total) }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+
+    {# ---------- TOTALS IF ONLY ONE PAGE ---------- #}
+    {% if total_items <= first_page_size %}
+
+        <div class="amount-bar">
+            Amount in words: {{ amount_in_words }}
+        </div>
+
+        <div class="totals-container">
+
+    <div class="total-line">
+        <div class="label">Subtotal</div>
+        <div class="value">{{ "%.2f"|format(invoice.subtotal) }}</div>
+    </div>
+
+    <div class="total-line">
+        <div class="label">CGST ({{ "%.2f"|format(cgst_percent) }}%)</div>
+        <div class="value">{{ "%.2f"|format(cgst_amount) }}</div>
+    </div>
+
+    <div class="total-line">
+        <div class="label">SGST ({{ "%.2f"|format(sgst_percent) }}%)</div>
+        <div class="value">{{ "%.2f"|format(sgst_amount) }}</div>
+    </div>
+
+    <div class="total-line">
+        <div class="label">Discount</div>
+        <div class="value">{{ "%.2f"|format(invoice.discount_amount) }}</div>
+    </div>
+
+</div>
+
+        <div class="grand-total-wrap">
+            <div class="grand-pill">
+                <div class="grand-pill-left">Grand total</div>
+                <div class="grand-pill-right">
+                    {{ "%.2f"|format(invoice.net_amount) }}
+                </div>
+            </div>
+        </div>
+
+        <div class="generated-box">
+            Generated on {{ invoice.bill_date.strftime("%d-%b-%Y") }} — Stacklycare Hospital<br>
+            Thank you for choosing Stacklycare. Wishing you a speedy recovery.
+        </div>
+
+    {% endif %}
+
+  </div> {# FOOTER ONLY IF SINGLE-PAGE INVOICE #}
+  {% if total_items <= first_page_size %}
+  <div class="footer-strip">
+      <div>Online consultation 24/7</div>
+      <div>Laboratories</div>
+      <div>Delivery of medicines</div>
+  </div>
+  {% endif %}
+
+</div>  {# ---------- REMAINING PAGES IF MORE THAN 15 ITEMS ---------- #}
+{% if total_items > first_page_size %}
+
+    {% set remaining_items = items[first_page_size:] %}
+    {% set remaining_count = remaining_items|length %}
+    {% set remaining_pages = (remaining_count + next_page_size - 1) // next_page_size %}
+
+    {% for page_no in range(remaining_pages) %}
+        {% set start = page_no * next_page_size %}
+        {% set page_items = remaining_items[start:start + next_page_size] %}
+
+<div class="a4">
+  <div class="page-inner">
+
+    <div class="med-title-small">
+        Medicine &amp; Drugs (Continued)
+    </div>
+
+    <div class="table-wrapper">
+        <table class="medicine-table">
+
+            <thead>
+            <tr>
+                <th>S.no</th>
+                <th>Descriptions</th>
+                <th>Quantity</th>
+                <th>Unit price</th>
+                <th>Total</th>
+            </tr>
+            </thead>
+
+            <tbody>
+            {% for item in page_items %}
+            <tr>
+
+                <td class="col-center">
+                    {{ first_page_size + (page_no * next_page_size) + loop.index }}
+                </td>
+
+                <td class="col-left">
+                    <div class="item-name">{{ item.drug_name }}</div>
+                    <div class="item-sub">
+                        Code: {{ item.item_code }} • Rack {{ item.rack_no }} • Shelf {{ item.shelf_no }}
+                    </div>
+                </td>
+
+                <td class="col-center">{{ item.quantity }}</td>
+                <td class="col-right">{{ "%.2f"|format(item.unit_price) }}</td>
+                <td class="col-right">{{ "%.2f"|format(item.line_total) }}</td>
+
+            </tr>
+            {% endfor %}
+            </tbody>
+
+        </table>
+    </div>
+
+    {# ---------- TOTALS ONLY ON THE LAST PAGE ---------- #}
+    {% if page_no == remaining_pages - 1 %}
+
+        <div class="amount-bar">
+            Amount in words: {{ amount_in_words }}
+        </div>
+
+        <div class="totals-container">
+
+            <div class="total-line">
+                <div class="label">Subtotal</div>
+                <div class="value">{{ "%.2f"|format(invoice.subtotal) }}</div>
+            </div>
+
+            <div class="total-line">
+                <div class="label">Tax ({{ tax_percent }}%)</div>
+                <div class="value">{{ "%.2f"|format(tax_total) }}</div>
+            </div>
+
+            <div class="total-line">
+                <div class="label">Discount</div>
+                <div class="value">{{ "%.2f"|format(invoice.discount_amount) }}</div>
+            </div>
+
+        </div>
+
+        <div class="grand-total-wrap">
+            <div class="grand-pill">
+                <div class="grand-pill-left">Grand total</div>
+                <div class="grand-pill-right">
+                    {{ "%.2f"|format(invoice.net_amount) }}
+                </div>
+            </div>
+        </div>
+
+        <div class="generated-box">
+            Generated on {{ invoice.bill_date.strftime("%d-%b-%Y") }} — Stacklycare Hospital<br>
+            Thank you for choosing Stacklycare. Wishing you a speedy recovery.
+        </div>
+
+    {% endif %}
+
+  </div> {# FOOTER ONLY ON LAST OVERALL PAGE (multi-page case) #}
+  {% if page_no == remaining_pages - 1 %}
+  <div class="footer-strip">
+      <div>Online consultation 24/7</div>
+      <div>Laboratories</div>
+      <div>Delivery of medicines</div>
+  </div>
+  {% endif %}
+
+</div>  {% endfor %}
+{% endif %}
+
+</body>
+</html>

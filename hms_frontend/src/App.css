@@ -1,0 +1,84 @@
+/* App.css */
+#root {
+  
+  max-width: 2560px;
+  width: 100%;        /* take full available width */
+  margin: 0 auto;     /* center content when screen >1440px */
+  padding: 0;
+  text-align: center;
+  overflow-x: hidden; 
+  
+}
+
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
+}
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
+}
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
+}
+
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
+}
+
+.card {
+  padding: 2em;
+}
+
+.read-the-docs {
+  color: #888;
+}
+
+/*App.css*/
+/* =========================================================
+   REMOVE BROWSER PASSWORD REVEAL / AUTOFILL ICONS
+   Works in: Chrome, Edge, Firefox, Safari, Brave, Opera
+   ========================================================= */
+
+/* Edge / IE password reveal & clear */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}
+
+/* Chrome / Edge / Safari autofill & credential icons */
+input[type="password"]::-webkit-credentials-auto-fill-button,
+input[type="password"]::-webkit-clear-button,
+input[type="password"]::-webkit-inner-spin-button,
+input[type="password"]::-webkit-outer-spin-button {
+  display: none !important;
+  appearance: none;
+}
+
+/* Chrome / Edge: hide decoration container */
+input[type="password"]::-webkit-textfield-decoration-container {
+  display: none !important;
+}
+
+/* Firefox password reveal */
+input[type="password"] {
+  -moz-appearance: textfield;
+}
+
+/* Safari autofill background + icon */
+input:-webkit-autofill {
+  box-shadow: 0 0 0px 1000px transparent inset !important;
+  -webkit-text-fill-color: inherit !important;
+}

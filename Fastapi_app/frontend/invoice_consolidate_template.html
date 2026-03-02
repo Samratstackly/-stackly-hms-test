@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Stacklycare Consolidate Invoice</title>
+
+    <style>
+        @page {
+            size: A4;
+            margin: 170px 0 70px 0; /* top for header, bottom for footer */
+        }
+
+        :root {
+            --page-width: 794px;
+            --green-main: #0D924A;
+            --green-dark: #025126;
+            --green-light: #E8FFF3;
+            --text-muted: #6b6b6b;
+            --font-main: "Segoe UI", Arial, sans-serif;
+            --mild-green-text: #4CAF50;
+            --yellow-accent: #FFC107;
+            --table-line-color: #66BB6A;
+        }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-main);
+            background: #ffffff;
+            -webkit-print-color-adjust: exact;
+        }
+
+        /* Fixed header – placed in top margin */
+        .header {
+            position: fixed;
+            top: -170px;
+            left: 0;
+            right: 0;
+            width: var(--page-width);
+            margin: 0 auto;
+            z-index: 20;
+            background: #ffffff;
+        }
+
+        .a4 {
+            width: var(--page-width);
+            min-height: 1123px;
+            height: auto;
+            margin: 0 auto;
+            background: #ffffff;
+            box-sizing: border-box;
+            position: relative;
+            display: block;
+            padding-top: 0;      /* handled by @page margin */
+            padding-bottom: 0;
+        }
+
+        .content-wrapper {
+            padding: 0 32px;
+            position: relative;
+            z-index: 10;
+            margin-bottom: 40px;
+        }
+
+        .fw-bold { font-weight: 700; }
+        .text-right { text-align: right; }
+        .text-muted { color: var(--text-muted); }
+        .icon-sm { width: 13px; vertical-align: middle; }
+
+        .watermark {
+            position: fixed;
+            top: 65%;
+            left: 75%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+            opacity: 0.15;
+            pointer-events: none;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .watermark img { width: 400px; height: auto; }
+
+        /* HEADER (inside fixed .header) */
+        .header-grid {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            position: relative;
+            height: 170px;
+            overflow: hidden;
+        }
+
+        .header-background-layer {
+            position: absolute;
+            top: 0; left: -100px; height: 100%; width: 70%;
+            background: linear-gradient(135deg, #90e4b2);
+            transform: skewX(-20deg);
+            transform-origin: top left;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .header-background-layer::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url("invoices_statics/stacklycare_icon.png");
+            background-size: 12px 12px;
+            background-position:
+                4% 10%, 18% 13%, 32% 9%, 46% 12%, 60% 10%, 74% 13%, 88% 9%,
+                6% 28%, 20% 32%, 34% 26%, 48% 30%, 62% 28%, 76% 32%, 90% 26%,
+                8% 46%, 22% 50%, 36% 44%, 50% 48%, 64% 46%, 78% 50%, 92% 44%,
+                10% 78%, 24% 82%, 38% 76%, 52% 80%, 66% 78%, 80% 82%, 86% 76%;
+            background-repeat: no-repeat;
+            opacity: 0.45;
+            transform: skewX(20deg);
+            pointer-events: none;
+        }
+
+        .header-left-content {
+            position: absolute; top: 45px; left: 32px;
+            display: flex; align-items: center; z-index: 10;
+        }
+        .header-logo img { width: 80px; height: auto; display: block; }
+
+        .brand-text {
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: var(--green-main);
+            margin-left: 15px;
+            white-space: nowrap;
+        }
+
+        .header-right {
+            margin-left: auto;
+            padding: 35px 55px 0 0;
+            position: relative;
+            z-index: 5;
+            text-align: right;
+            width: auto;
+        }
+
+        .invoice-title {
+            font-size: 30px;
+            font-weight: 800;
+            color: var(--green-main);
+            text-transform: uppercase;
+            text-decoration: underline;
+            text-decoration-thickness: 3px;
+            text-underline-offset: 4px;
+            margin-bottom: 8px;
+        }
+
+        .consolidate-badge {
+            background: linear-gradient(90deg, var(--green-dark) 0%, var(--green-main) 100%);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .invoice-meta-table { width: auto; font-size: 13px; border-collapse: collapse; margin-left: auto; }
+        .invoice-meta-table td.label {
+            color: var(--green-main);
+            font-weight: 700;
+            padding: 4px 10px 4px 0;
+            text-align: left;
+            min-width: 120px;
+        }
+        .invoice-meta-table td.value {
+            text-align: right;
+            font-weight: 600;
+            color: #000;
+            padding: 4px 0;
+            white-space: nowrap;
+        }
+
+        /* INFO BLOCK */
+        .info-block { margin-top: 30px; }
+
+        .info-grid-top {
+            display: grid;
+            grid-template-columns: 22% 15% 15% 15% 33%;
+            column-gap: 16px;
+            font-size: 11.5px;
+        }
+
+        .info-title { font-size: 12px; font-weight: 700; color: var(--green-main); margin-bottom: 4px; }
+        .hospital-name { font-size: 13px; font-weight: 800; }
+        .hospital-address { font-size: 11px; line-height: 1.3; margin-bottom: 4px; }
+
+        .contact-row-left { margin-top: 2px; font-size: 11px; display: flex; align-items: center; }
+        .contact-row-left img { margin-right: 6px; }
+
+        .invoice-to-wrapper { text-align: right; overflow-wrap: break-word; margin-right: 65px; }
+
+        .contact-table-right { margin-left: auto; border-collapse: collapse; width: auto; padding: 0; }
+        .contact-table-right td { padding: 2px 0; vertical-align: middle; }
+
+        .contact-text-cell { text-align: right; font-size: 11px; padding-right: 8px; white-space: nowrap; }
+        .contact-icon-cell { text-align: right; width: 16px; padding-right: 0; }
+        .contact-icon-cell img.icon-sm { display: block; margin-left: auto; }
+
+        .info-label { font-size: 11.5px; font-weight: 700; color: var(--mild-green-text); margin-bottom: 4px; }
+        .info-value { font-size: 11.5px; font-weight: 600; }
+
+        .info-grid-bottom {
+            display: grid;
+            grid-template-columns: 22% 15% 15% 15% 33%;
+            column-gap: 16px;
+            font-size: 11.5px;
+            margin-top: 20px;
+            align-items: start;
+        }
+
+        /* SUMMARY BADGES */
+        .invoice-count-summary {
+            display: flex;
+            justify-content: space-between;
+            background-color: var(--green-light);
+            padding: 12px 14px;
+            border-radius: 8px;
+            margin: 20px 0;
+            gap: 10px;
+        }
+        .summary-item { text-align: center; flex: 1; }
+        .summary-item .label { font-size: 11px; color: var(--text-muted); margin-bottom: 5px; }
+        .summary-item .value { font-size: 18px; font-weight: 800; color: var(--green-dark); }
+
+        /* TABLE */
+        .table-container { margin-top: 15px; margin-bottom: 25px; }
+
+        .consolidated-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11.5px;
+        }
+
+        .consolidated-table thead tr {
+            background-color: var(--green-main);
+            color: white;
+        }
+
+        .consolidated-table thead th {
+            font-size: 11.5px;
+            font-weight: 800;
+            padding: 10px 6px;
+            text-align: center;
+            border: 1px solid var(--green-dark);
+            white-space: nowrap;
+        }
+
+        .consolidated-table tbody td {
+            padding: 10px 6px;
+            border: 1px solid #c8e6c9;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .consolidated-table tbody td.desc-cell {
+            text-align: left;
+            padding-left: 10px;
+            padding-right: 10px;
+            font-weight: 700;
+            color: var(--green-dark);
+        }
+
+        .money-cell {
+            text-align: right !important;
+            padding-right: 12px !important;
+            font-weight: 800;
+            color: #000;
+            white-space: nowrap;
+        }
+
+        /* TOTALS */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 55% 45%;
+            margin-top: 25px;
+            page-break-inside: avoid;
+            gap: 15px;
+        }
+
+        .payment-details {
+            padding: 10px 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .amount-in-words-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--green-main);
+            margin-bottom: 2px;
+        }
+
+        .amount-in-words-value {
+            font-size: 10px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: var(--mild-green-text);
+            line-height: 1.4;
+        }
+
+        .payment-detail-row { display: flex; margin-bottom: 6px; }
+        .payment-label { font-size: 12px; font-weight: 700; color: var(--mild-green-text); width: 140px; }
+        .payment-value { font-size: 12px; font-weight: 600; }
+
+        /* TOTALS CARD – now with dark green gradient and white text */
+        .totals-box {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            margin-top: 5px;
+            gap: 12px;
+        }
+
+        .totals-mini {
+            width: 100%;
+            max-width: 350px;
+            border: 1px solid #c8e6c9;
+            border-radius: 12px;
+            padding: 14px 14px;
+            box-sizing: border-box;
+            background: linear-gradient(135deg, var(--green-dark), #0D7F41);
+            color: #ffffff;
+        }
+
+        .totals-mini-row {
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+            align-items: center;
+            padding: 7px 0;
+            font-size: 12px;
+            border-bottom: 1px dashed #c8e6c9;
+        }
+        .totals-mini-row:last-child { border-bottom: none; }
+
+        .totals-mini-label {
+            font-weight: 800;
+            color: #ffffff;
+            line-height: 1.2;
+        }
+
+        .totals-mini-value {
+            font-weight: 900;
+            color: #ffffff;
+            white-space: nowrap;
+            text-align: right;
+            min-width: 110px;
+        }
+
+        .totals-divider {
+            height: 1px;
+            width: 100%;
+            background: #c8e6c9;
+            margin: 10px 0;
+            opacity: 0.6;
+        }
+
+        .grand-total-row {
+            width: 360px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            margin-top: 0px;
+            background: linear-gradient(90deg, var(--green-dark), #0D7F41);
+            color: #ffffff;
+            font-size: 18px;
+            font-weight: 900;
+            padding: 6px 16px 6px 0px;
+            border-radius: 22px 0 0 22px;
+            position: relative;
+            height: 48px;
+        }
+        .grand-total-row::before {
+            content: "";
+            position: absolute;
+            right: 155px;
+            top: 20%;
+            width: 2px;
+            height: 60%;
+            background-color: #ffffff;
+            opacity: 0.8;
+        }
+        .grand-total-label { padding-right: 28px; flex-grow: 1; text-align: right; letter-spacing: 0.5px; }
+        .grand-total-value { width: 125px; text-align: right; font-size: 20px; white-space: nowrap; }
+
+        /* FOOTER – fixed, placed in bottom margin */
+        .fixed-footer-container {
+            position: fixed;
+            bottom: -70px;
+            left: 0;
+            width: 100%;
+            z-index: 999;
+        }
+        .footer-bar {
+            background-color: var(--green-dark);
+            color: #ffffff;
+            font-size: 10px;
+            text-align: center;
+            padding: 8px 0;
+            width: 100%;
+            position: relative;
+            z-index: 20;
+        }
+        .flower-decoration {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background-color: rgba(13, 146, 74, 0.15);
+            border-radius: 100% 0 0 0;
+            z-index: 25;
+            pointer-events: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="watermark">
+        <img src="invoices_statics/stacklycare_icon.png" alt="watermark logo">
+    </div>
+
+    <!-- Fixed Header -->
+    <div class="header">
+        <section class="header-grid">
+            <div class="header-background-layer"></div>
+
+            <div class="header-left-content">
+                <div class="header-logo">
+                    <img src="invoices_statics/stacklycare_icon.png" alt="Stacklycare logo" />
+                </div>
+                <div class="brand-text">Stacklycare</div>
+            </div>
+
+            <div class="header-right">
+                <div class="invoice-title">CONSOLIDATE INVOICE</div>
+                <div class="consolidate-badge">CONSOLIDATED BILL</div>
+
+                <table class="invoice-meta-table">
+                    <tr><td class="label">Consolidate ID:</td><td class="value">{{ consolidate_id }}</td></tr>
+                    <tr><td class="label">Generated Date:</td><td class="value">{{ generated_date }}</td></tr>
+                    <tr><td class="label">Total Invoices:</td><td class="value">{{ invoice_ids|length }}</td></tr>
+                    <tr><td class="label">Total Rows:</td><td class="value">{{ row_count }}</td></tr>
+                    <tr><td class="label">Grand Total:</td><td class="value">$ {{ "%.2f"|format(grand_total) }}</td></tr>
+                </table>
+            </div>
+        </section>
+    </div>
+
+    <div class="a4">
+        <div class="content-wrapper">
+            <section class="info-block">
+                <div class="info-grid-top">
+                    <div>
+                        <div class="info-title">Invoice from</div>
+                        <div class="hospital-name">Stacklycare</div>
+                        <div class="hospital-address">
+                            5th street cross cut road,<br/>
+                            New city of Newyork<br/>
+                            USA
+                        </div>
+                        <div class="contact-row-left">
+                            <img class="icon-sm" src="invoices_statics/logo_mail.png" alt="mail" />
+                            <span>Stacklycare@gmail.com</span>
+                        </div>
+                        <div class="contact-row-left">
+                            <img class="icon-sm" src="invoices_statics/logo_phone.png" alt="phone" />
+                            <span>+1-78654327-7896</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="info-label">Patient ID</div>
+                        <div class="info-value">{{ patient_id }}</div>
+                    </div>
+
+                    <div>
+                        <div class="info-label">Billing Staff</div>
+                        <div class="info-value">{{ billing_staff }}</div>
+                    </div>
+
+                    <div>
+                        <div class="info-label">Staff ID</div>
+                        <div class="info-value">{{ billing_staff_id }}</div>
+                    </div>
+
+                    <div class="invoice-to-wrapper">
+                        <div class="info-title">Invoice to</div>
+                        <div class="info-value fw-bold">{{ patient_name }}</div>
+                        <div class="hospital-address">
+                            {{ patient_address if patient_address else 'N/A' }}
+                        </div>
+
+                        <table class="contact-table-right">
+                            <tr>
+                                <td class="contact-text-cell">{{ patient_email }}</td>
+                                <td class="contact-icon-cell">
+                                    <img class="icon-sm" src="invoices_statics/logo_mail.png" alt="mail" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="contact-text-cell">{{ patient_phone }}</td>
+                                <td class="contact-icon-cell">
+                                    <img class="icon-sm" src="invoices_statics/logo_phone.png" alt="phone" />
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="info-grid-bottom">
+                    <div></div>
+                    <div>
+                        <div class="info-label">Generated By</div>
+                        <div class="info-value">{{ billing_staff }}</div>
+                    </div>
+                    <div>
+                        <div class="info-label">Department</div>
+                        <div class="info-value">Billing Department</div>
+                    </div>
+                    <div>
+                        <div class="info-label">Payment Status</div>
+                        <div class="info-value fw-bold">PAID</div>
+                    </div>
+                    <div></div>
+                </div>
+            </section>
+
+            <!-- Invoice Summary -->
+            <div class="invoice-count-summary">
+                <div class="summary-item">
+                    <div class="label">Invoices</div>
+                    <div class="value">{{ invoice_ids|length }}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="label">Subtotal</div>
+                    <div class="value">$ {{ "%.2f"|format(subtotal) }}</div>
+                </div>
+                <div class="summary-item">
+                    <div class="label">Discount</div>
+                    <div class="value">{{ "%.2f"|format(discount_percent) }}%</div>
+                </div>
+                <div class="summary-item">
+                    <div class="label">CGST</div>
+                    <div class="value">{{ "%.2f"|format(cgst_percent) }}%</div>
+                </div>
+                <div class="summary-item">
+                    <div class="label">SGST</div>
+                    <div class="value">{{ "%.2f"|format(sgst_percent) }}%</div>
+                </div>
+                <div class="summary-item">
+                    <div class="label">Grand Total</div>
+                    <div class="value">$ {{ "%.2f"|format(grand_total) }}</div>
+                </div>
+            </div>
+
+            <!-- Consolidated Table (Each item row) -->
+            <div class="table-container">
+                <table class="consolidated-table">
+                    <thead>
+                        <tr>
+                            <th>S.No</th>
+                            <th>Invoice ID</th>
+                            <th>Description</th>
+                            <th>Qty</th>
+                            <th>Date</th>
+                            <th>Price</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for r in rows %}
+                        <tr>
+                            <td>{{ r.s_no }}</td>
+                            <td><strong>{{ r.invoice_id }}</strong></td>
+                            <td class="desc-cell">{{ r.description }}</td>
+                            <td>{{ r.quantity }}</td>
+                            <td>{{ r.date }}</td>
+                            <td class="money-cell">$ {{ "%.2f"|format(r.amount) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Totals -->
+            <section class="summary-grid">
+                <div class="payment-details">
+                    <div class="amount-in-words-label">Amount in words:</div>
+                    <div class="amount-in-words-value">{{ amount_in_words }}</div>
+
+                    <div class="payment-detail-row">
+                        <div class="payment-label">Consolidate ID:</div>
+                        <div class="payment-value">{{ consolidate_id }}</div>
+                    </div>
+
+                    <div class="payment-detail-row">
+                        <div class="payment-label">Generated Date:</div>
+                        <div class="payment-value">{{ generated_date }}</div>
+                    </div>
+
+                    <div class="payment-detail-row">
+                        <div class="payment-label">Invoices Count:</div>
+                        <div class="payment-value">{{ invoice_ids|length }}</div>
+                    </div>
+                </div>
+
+                <div class="totals-box">
+                    <div class="totals-mini">
+                        <div class="totals-mini-row">
+                            <div class="totals-mini-label">Subtotal</div>
+                            <div class="totals-mini-value">$ {{ "%.2f"|format(subtotal) }}</div>
+                        </div>
+
+                        <div class="totals-mini-row">
+                            <div class="totals-mini-label">Discount ({{ "%.2f"|format(discount_percent) }}%)</div>
+                            <div class="totals-mini-value">- $ {{ "%.2f"|format(discount_amount) }}</div>
+                        </div>
+
+                        <div class="totals-mini-row">
+                            <div class="totals-mini-label">After Discount</div>
+                            <div class="totals-mini-value">$ {{ "%.2f"|format(tax_net_amount) }}</div>
+                        </div>
+
+                        <div class="totals-divider"></div>
+
+                        <div class="totals-mini-row">
+                            <div class="totals-mini-label">CGST ({{ "%.2f"|format(cgst_percent) }}%)</div>
+                            <div class="totals-mini-value">$ {{ "%.2f"|format(cgst_amount) }}</div>
+                        </div>
+
+                        <div class="totals-mini-row">
+                            <div class="totals-mini-label">SGST ({{ "%.2f"|format(sgst_percent) }}%)</div>
+                            <div class="totals-mini-value">$ {{ "%.2f"|format(sgst_amount) }}</div>
+                        </div>
+
+                        <div class="totals-mini-row">
+                            <div class="totals-mini-label">Total Tax ({{ "%.2f"|format(total_tax_percent) }}%)</div>
+                            <div class="totals-mini-value">$ {{ "%.2f"|format(total_tax) }}</div>
+                        </div>
+                    </div>
+
+                    <div class="grand-total-row">
+                        <div class="grand-total-label">Grand Total</div>
+                        <div class="grand-total-value">$ {{ "%.2f"|format(grand_total) }}</div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <!-- Fixed Footer -->
+    <div class="fixed-footer-container">
+        <div class="flower-decoration"></div>
+        <div class="footer-bar">
+            Generated on {{ today }} – Stacklycare hospital <br/>
+            Consolidate Invoice for {{ patient_name }} - {{ invoice_ids|length }} Paid Invoices
+        </div>
+    </div>
+</body>
+</html>

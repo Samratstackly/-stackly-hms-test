@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Stacklycare Invoice</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 170px 0 70px 0;
+        }
+        :root {
+            --page-width: 794px;
+            --green-main: #0D924A;
+            --green-dark: #025126;
+            --green-light: #E8FFF3;
+            --text-muted: #6b6b6b;
+            --font-main: "Segoe UI", Arial, sans-serif;
+            --mild-green-text: #4CAF50;
+            --table-line-color: #66BB6A;
+            --paid-green: #4CAF50;
+            --pending-orange: #FF9800;
+            --partial-blue: #2196F3;
+        }
+        html, body {
+            margin: 0;
+            padding: 0;
+            font-family: var(--font-main);
+            background: #ffffff;
+            -webkit-print-color-adjust: exact;
+        }
+        .header {
+            position: fixed;
+            top: -170px;
+            left: 0;
+            right: 0;
+            width: var(--page-width);
+            margin: 0 auto;
+            z-index: 20;
+            background: #ffffff;
+        }
+        .a4 {
+            width: var(--page-width);
+            min-height: 1123px;
+            height: auto;
+            margin: 0 auto;
+            background: #ffffff;
+            box-sizing: border-box;
+            position: relative;
+            display: block;
+            padding-top: 0;
+            padding-bottom: 0;
+        }
+        .content-wrapper {
+            padding: 0 32px 20px 32px;
+            position: relative;
+            z-index: 10;
+        }
+        .fw-bold { font-weight: 700; }
+        .text-right { text-align: right; }
+        .text-center { text-align: center; }
+        .text-muted { color: var(--text-muted); }
+        .icon-sm { width: 13px; vertical-align: middle; }
+        .payment-progress-bar {
+            width: 100%;
+            height: 8px;
+            background: var(--green-light);
+            border-radius: 4px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        .payment-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--paid-green), var(--partial-blue));
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        .watermark {
+            position: fixed;
+            top: 65%;
+            left: 75%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+            opacity: 0.15;
+            pointer-events: none;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .watermark img { width: 400px; height: auto; }
+        .header-grid {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            position: relative;
+            height: 170px;
+            overflow: hidden;
+        }
+        .header-background-layer {
+            position: absolute;
+            top: 0; left: -100px; height: 100%; width: 70%;
+            background: linear-gradient(135deg, #90e4b2);
+            transform: skewX(-20deg);
+            transform-origin: top left;
+            z-index: 0;
+            overflow: hidden;
+        }
+        .header-background-layer::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: url("invoices_statics/stacklycare_icon.png");
+            background-size: 12px 12px;
+            background-position:
+                4% 10%, 18% 13%, 32% 9%, 46% 12%, 60% 10%, 74% 13%, 88% 9%,
+                6% 28%, 20% 32%, 34% 26%, 48% 30%, 62% 28%, 76% 32%, 90% 26%,
+                8% 46%, 22% 50%, 36% 44%, 50% 48%, 64% 46%, 78% 50%, 92% 44%,
+                10% 78%, 24% 82%, 38% 76%, 52% 80%, 66% 78%, 80% 82%, 86% 76%;
+            background-repeat: no-repeat;
+            opacity: 0.45;
+            transform: skewX(20deg);
+            pointer-events: none;
+        }
+        .header-left-content {
+            position: absolute; top: 45px; left: 32px;
+            display: flex; align-items: center; z-index: 10;
+        }
+        .header-logo img { width: 80px; height: auto; display: block; }
+        .brand-text {
+            font-size: 36px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            color: var(--green-main);
+            margin-left: 15px;
+            white-space: nowrap;
+        }
+        .header-right {
+            margin-left: auto;
+            padding: 35px 55px 0 0;
+            position: relative;
+            z-index: 5;
+            text-align: right;
+            width: auto;
+        }
+        .invoice-title {
+            font-size: 38px;
+            font-weight: 800;
+            color: var(--green-main);
+            text-transform: uppercase;
+            text-decoration: underline;
+            text-decoration-thickness: 3px;
+            text-underline-offset: 4px;
+            margin-bottom: 15px;
+        }
+        .invoice-meta-table {
+            width: auto;
+            font-size: 13px;
+            border-collapse: collapse;
+            margin-left: auto;
+        }
+        .invoice-meta-table td.label {
+            color: var(--green-main);
+            font-weight: 700;
+            padding: 4px 10px 4px 0;
+            text-align: left;
+            min-width: 100px;
+        }
+        .invoice-meta-table td.value {
+            text-align: right;
+            font-weight: 600;
+            color: #000;
+            padding: 4px 0;
+            white-space: nowrap;
+        }
+        .info-block { margin-top: 30px; }
+        .info-grid-top {
+            display: grid;
+            grid-template-columns: 22% 15% 15% 15% 33%;
+            column-gap: 16px;
+            font-size: 11.5px;
+        }
+        .info-title { font-size: 12px; font-weight: 700; color: var(--green-main); margin-bottom: 4px; }
+        .hospital-name { font-size: 13px; font-weight: 800; }
+        .hospital-address { font-size: 11px; line-height: 1.3; margin-bottom: 4px; }
+        .contact-row-left { margin-top: 2px; font-size: 11px; display: flex; align-items: center; }
+        .contact-row-left img { margin-right: 6px; }
+        .invoice-to-wrapper { text-align: right; overflow-wrap: break-word; margin-right: 65px; }
+        .contact-table-right { margin-left: auto; border-collapse: collapse; width: auto; padding: 0; }
+        .contact-table-right td { padding: 2px 0; vertical-align: middle; }
+        .contact-text-cell { text-align: right; font-size: 11px; padding-right: 8px; white-space: nowrap; }
+        .contact-icon-cell { text-align: right; width: 16px; padding-right: 0; }
+        .contact-icon-cell img.icon-sm { display: block; margin-left: auto; }
+        .info-label { font-size: 11.5px; font-weight: 700; color: var(--mild-green-text); margin-bottom: 4px; }
+        .info-value { font-size: 11.5px; font-weight: 600; }
+        .info-grid-bottom {
+            display: grid;
+            grid-template-columns: 22% 15% 15% 15% 33%;
+            column-gap: 16px;
+            font-size: 11.5px;
+            margin-top: -50px;
+            align-items: start;
+        }
+        .partial-payment-box {
+            background: linear-gradient(135deg, #E3F2FD, #E8F5E9);
+            border: 1px solid var(--partial-blue);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 15px 0;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .partial-payment-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            font-size: 11.5px;
+        }
+        .partial-payment-item { display: flex; justify-content: space-between; padding: 4px 0; }
+        .partial-label { font-weight: 600; color: var(--green-dark); }
+        .partial-value { font-weight: 700; color: var(--partial-blue); }
+        .pending-amount { color: var(--pending-orange); }
+        .paid-amount { color: var(--paid-green); }
+        .treatment-charges { margin-top: 30px; }
+        .treatment-charges-header {
+            background-color: var(--green-dark);
+            color: #59dd75;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+            padding: 8px 0;
+            border-radius: 4px 4px 0 0;
+            letter-spacing: 0.5px;
+        }
+        .settlement-header {
+            background-color: var(--green-dark);
+            color: #59dd75;
+            font-size: 16px;
+            font-weight: 700;
+            text-align: center;
+            padding: 8px 0;
+            border-radius: 4px 4px 0 0;
+            letter-spacing: 0.5px;
+            margin-top: 22px;
+        }
+        .info-strip {
+            background-color: var(--green-light);
+            padding: 4px 12px;
+            font-size: 10px;
+            color: var(--text-muted);
+            border-radius: 0 0 4px 4px;
+            margin-bottom: 10px;
+        }
+        .table-container { position: relative; }
+        .charges-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 12px;
+            margin-top: 0px;
+            position: relative;
+            z-index: 1;
+        }
+        .charges-table thead { display: table-header-group; }
+        .charges-table tr { page-break-inside: avoid; }
+        .charges-table thead th {
+            font-size: 12.5px;
+            font-weight: 700;
+            color: var(--green-dark);
+            padding: 8px 6px;
+            text-align: center;
+            position: relative;
+            border-top: 2px solid var(--green-main);
+            border-bottom: 2px solid var(--green-main);
+        }
+        .charges-table thead th:not(:last-child):after {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 2px;
+            height: 100%;
+            background-color: var(--green-main);
+            transform: skewX(-25deg);
+            transform-origin: bottom;
+        }
+        .charges-table tbody td.desc-col { text-align: center; font-weight: 700; }
+        .charges-table tbody tr td {
+            border-bottom: 1px solid var(--table-line-color);
+            padding: 14px 6px;
+            font-weight: 600;
+            color: var(--green-dark);
+        }
+        .charges-table td.sno-col { width: 6%; text-align: center; }
+        .charges-table td.desc-col { width: 28%; text-align: center; font-weight: 700; }
+        .charges-table td.qty-col { width: 8%; text-align: center; }
+        .charges-table td.unit-col { width: 12%; text-align: right; padding-right: 10px; }
+        .charges-table td.disc-col { width: 10%; text-align: center; }
+        .charges-table td.tax-col { width: 10%; text-align: center; }
+        .charges-table td.total-col { width: 26%; text-align: center; padding-right: 0px; }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: 55% 45%;
+            margin-top: 15px;
+            page-break-inside: avoid;
+            gap: 20px;
+        }
+        .payment-details {
+            padding: 10px 0;
+            display: flex;
+            flex-direction: column;
+        }
+        /* ----- Amount in words bar (pharmacy style) ----- */
+        .amount-in-words-bar {
+            background: var(--green-light);
+            border-left: 6px solid var(--green-main);
+            padding: 7px 12px;
+            margin: 10px 0 5px 0;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--green-dark);
+            border-radius: 4px;
+            line-height: 1.4;
+        }
+        .amount-in-words-bar .label {
+            font-size: 12px;
+            font-weight: 800;
+            color: var(--green-main);
+            margin-right: 8px;
+        }
+        .payment-detail-row { display: flex; margin-bottom: 2px; }
+        .payment-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--mild-green-text);
+            width: 110px;
+        }
+        .payment-value { font-size: 12px; font-weight: 600; }
+        .totals-box {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            margin-top: 5px;
+            gap: 12px;
+        }
+        /* ===== SUBTOTAL CARD NOW MATCHES PHARMACY PATIENT BOX STYLE ===== */
+        .totals-mini {
+            width: 100%;
+            max-width: 340px;
+            background: #ffffff;
+            border: 2px solid var(--green-main);
+            border-radius: 12px;
+            padding: 18px 20px;
+            box-sizing: border-box;
+            box-shadow: 0 4px 12px rgba(13, 146, 74, 0.08);
+        }
+        .totals-mini-header {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--green-main);
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 2px dashed var(--green-light);
+            letter-spacing: 0.3px;
+        }
+        .totals-mini-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            font-size: 13px;
+            border-bottom: 1px solid #e0f0e0;
+        }
+        .totals-mini-row:last-child {
+            border-bottom: none;
+        }
+        .totals-mini-label {
+            font-weight: 600;
+            color: var(--green-dark);
+            opacity: 0.9;
+        }
+        .totals-mini-value {
+            font-weight: 700;
+            color: var(--green-main);
+            white-space: nowrap;
+            min-width: 110px;
+            text-align: right;
+            font-family: 'Courier New', monospace;
+        }
+        .totals-divider {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--green-main), transparent);
+            margin: 14px 0 10px 0;
+            opacity: 0.3;
+        }
+        .settlement-row {
+            background: rgba(255, 193, 7, 0.05);
+            border-radius: 8px;
+            padding: 8px 10px;
+            margin: 4px 0;
+        }
+        .total-collected {
+            background: rgba(33, 150, 243, 0.08);
+            border-radius: 8px;
+            padding: 8px 10px;
+            margin: 4px 0;
+        }
+        .grand-total-row {
+            width: 340px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            background: linear-gradient(90deg, var(--green-dark), #0D7F41);
+            color: #ffffff;
+            font-size: 20px;
+            font-weight: 700;
+            padding: 6px 20px 6px 0px;
+            border-radius: 20px 0 0 20px;
+            position: relative;
+            height: 45px;
+            margin-right: 0;
+        }
+        .grand-total-row::before {
+            content: "";
+            position: absolute;
+            right: 160px;
+            top: 20%;
+            width: 2px;
+            height: 60%;
+            background-color: #ffffff;
+            opacity: 0.8;
+        }
+        .grand-total-label { letter-spacing: 0.5px; padding-right: 35px; font-size: 20px; flex-grow: 1; text-align: right; color: #ffffff; }
+        .grand-total-value { width: 130px; text-align: right; font-size: 22px; font-family: 'Courier New', monospace; color: #ffffff; }
+        .partial-summary {
+            background: linear-gradient(135deg, #F5F9FF, #F0FFF0);
+            border: 1px dashed var(--partial-blue);
+            border-radius: 8px;
+            padding: 12px;
+            width: 100%;
+            max-width: 320px;
+            box-sizing: border-box;
+        }
+        .partial-summary-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--partial-blue);
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        .partial-summary-row { display: flex; justify-content: space-between; padding: 3px 0; font-size: 12px; }
+        .partial-summary-label { color: var(--green-dark); font-weight: 600; }
+        .partial-summary-value { font-weight: 700; }
+        .static-bottom-details {
+            display: grid;
+            grid-template-columns: 65% 35%;
+            align-items: end;
+            margin-top: 30px;
+            page-break-inside: avoid;
+            page-break-before: auto;
+        }
+        .terms-container {
+            font-size: 9px;
+            color: var(--mild-green-text);
+            line-height: 1.4;
+            background: #fcfefc;
+            padding: 12px 14px;
+            border-radius: 12px;
+            border-left: 4px solid var(--green-main);
+        }
+        .terms-heading { font-size: 11px; font-weight: 700; color: var(--green-main); margin-bottom: 6px; }
+        .terms-list { padding-left: 18px; margin: 0; list-style-type: decimal; }
+        .terms-list li { margin-bottom: 3px; }
+        .signature-box { text-align: right; padding-right: 120px; }
+        .signature-logo { width: 70px; height: auto; margin-bottom: 2px; }
+        .signature-label { font-size: 11px; font-weight: 600; color: #000; }
+        .due-date-warning {
+            background: linear-gradient(135deg, #FFF3E0, #FFECB3);
+            border: 1px solid var(--pending-orange);
+            border-radius: 6px;
+            padding: 8px 12px;
+            margin-top: 10px;
+            font-size: 11px;
+            color: #E65100;
+            font-weight: 600;
+            text-align: center;
+        }
+        .fixed-footer-container {
+            position: fixed;
+            bottom: -70px;
+            left: 0;
+            width: 100%;
+            z-index: 999;
+        }
+        .footer-bar {
+            background-color: var(--green-dark);
+            color: #ffffff;
+            font-size: 10px;
+            text-align: center;
+            padding: 8px 0;
+            width: 100%;
+            position: relative;
+            z-index: 20;
+        }
+        .flower-decoration {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 100px;
+            height: 100px;
+            background-color: rgba(13, 146, 74, 0.15);
+            border-radius: 100% 0 0 0;
+            z-index: 25;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="watermark">
+        <img src="invoices_statics/stacklycare_icon.png" alt="watermark logo">
+    </div>
+    <div class="header">
+        <section class="header-grid">
+            <div class="header-background-layer"></div>
+            <div class="header-left-content">
+                <div class="header-logo">
+                    <img src="invoices_statics/stacklycare_icon.png" alt="Stacklycare logo" />
+                </div>
+                <div class="brand-text">Stacklycare</div>
+            </div>
+            <div class="header-right">
+                <div class="invoice-title">INVOICE</div>
+                <table class="invoice-meta-table">
+                    <tr><td class="label">Invoice number:</td><td class="value">{{ invoice.invoice_id }}</td></tr>
+                    <tr><td class="label">Invoice Date:</td><td class="value">{{ invoice.date }}</td></tr>
+                    <tr><td class="label">Phone number:</td><td class="value">{{ invoice.phone }}</td></tr>
+                    <tr><td class="label">Email ID:</td><td class="value">{{ invoice.email }}</td></tr>
+                    <tr><td class="label">Status:</td><td class="value">{{ invoice.status }}</td></tr>
+                </table>
+            </div>
+        </section>
+    </div>
+    <div class="a4">
+        <div class="content-wrapper">
+            <section class="info-block">
+                <div class="info-grid-top">
+                    <div>
+                        <div class="info-title">Invoice from</div>
+                        <div class="hospital-name">Stacklycare</div>
+                        <div class="hospital-address">
+                            5th street cross cut road,<br/>
+                            New city of Newyork<br/>
+                            USA
+                        </div>
+                        <div class="contact-row-left">
+                            <img class="icon-sm" src="invoices_statics/logo_mail.png" alt="mail" />
+                            <span>Stacklycare@gmail.com</span>
+                        </div>
+                        <div class="contact-row-left">
+                            <img class="icon-sm" src="invoices_statics/logo_phone.png" alt="phone" />
+                            <span>+1-78654327-7896</span>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="info-label">Patient ID</div>
+                        <div class="info-value">{{ invoice.patient_id }}</div>
+                    </div>
+                    <div>
+                        <div class="info-label">Admission Date</div>
+                        <div class="info-value">{{ invoice.admission_date }}</div>
+                    </div>
+                    <div>
+                        <div class="info-label">Discharge Date</div>
+                        <div class="info-value">{{ invoice.discharge_date if invoice.discharge_date else 'N/A' }}</div>
+                    </div>
+                    <div class="invoice-to-wrapper">
+                        <div class="info-title">Invoice to</div>
+                        <div class="info-value fw-bold">{{ invoice.patient_name }}</div>
+                        <div class="hospital-address">
+                            {{ invoice.address.replace(',', ',<br>')|safe if invoice.address else 'N/A' }}
+                        </div>
+                        <table class="contact-table-right">
+                            <tr>
+                                <td class="contact-text-cell">{{ invoice.email }}</td>
+                                <td class="contact-icon-cell">
+                                    <img class="icon-sm" src="invoices_statics/logo_mail.png" alt="mail" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="contact-text-cell">{{ invoice.phone }}</td>
+                                <td class="contact-icon-cell">
+                                    <img class="icon-sm" src="invoices_statics/logo_phone.png" alt="phone" />
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="info-grid-bottom">
+                    <div></div>
+                    <div>
+                        <div class="info-label">Doctor</div>
+                        <div class="info-value">{{ invoice.doctor }}</div>
+                    </div>
+                    <div>
+                        <div class="info-label">Department</div>
+                        <div class="info-value">{{ invoice.department }}</div>
+                    </div>
+                    <div>
+                        <div class="info-label">Payment type</div>
+                        <div class="info-value">{{ invoice.payment_method }}</div>
+                    </div>
+                    <div></div>
+                </div>
+            </section>
+            {% if is_partial_payment %}
+            <section class="partial-payment-box">
+                <div class="payment-progress-bar">
+                    <div class="payment-progress-fill" style="width: {{ payment_progress|default(0) }}%"></div>
+                </div>
+                <div class="partial-payment-grid">
+                    <div class="partial-payment-item">
+                        <span class="partial-label">Total Amount:</span>
+                        <span class="partial-value">$ {{ (grand_total|default(0))|round(2) }}</span>
+                    </div>
+                    <div class="partial-payment-item">
+                        <span class="partial-label">Paid Amount:</span>
+                        <span class="partial-value paid-amount">$ {{ (paid_amount|default(0))|round(2) }}</span>
+                    </div>
+                    <div class="partial-payment-item">
+                        <span class="partial-label">Pending Amount:</span>
+                        <span class="partial-value pending-amount">$ {{ (pending_amount|default(0))|round(2) }}</span>
+                    </div>
+                    <div class="partial-payment-item">
+                        <span class="partial-label">Payment Progress:</span>
+                        <span class="partial-value">{{ payment_progress|default(0) }}%</span>
+                    </div>
+                </div>
+                {% if due_date %}
+                <div class="due-date-warning">
+                    ⚠️ Next Payment Due: {{ due_date }}
+                </div>
+                {% endif %}
+            </section>
+            {% endif %}
+            <section class="treatment-charges">
+                <div class="treatment-charges-header">Treatment & Charges</div>
+                <div class="info-strip">This information is for NEW items billed today.</div>
+            </section>
+            <div class="table-container">
+                <table class="charges-table">
+                    <thead>
+                        <tr>
+                            <th class="sno-col">S.no</th>
+                            <th class="desc-col">Descriptions</th>
+                            <th class="qty-col">Qty</th>
+                            <th class="unit-col">Unit</th>
+                            <th class="disc-col">Disc %</th>
+                            <th class="tax-col">GST %</th>
+                            <th class="total-col">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in items %}
+                        <tr>
+                            <td class="sno-col">{{ loop.index }}</td>
+                            <td class="desc-col">{{ item.description }}</td>
+                            <td class="qty-col">{{ item.quantity }}</td>
+                            <td class="unit-col">$ {{ (item.unit_price|default(0))|round(2) }}</td>
+                            <td class="disc-col">
+                                {{ (discount_percent|default(0))|round(2) }}%
+                            </td>
+                            <td class="tax-col">
+                                {{ ((cgst_percent|default(0)) + (sgst_percent|default(0)))|round(2) }}%
+                            </td>
+                            <td class="total-col">
+                                $ {{ (item.total|default(0))|round(2) }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if settled_rows and settled_rows|length > 0 %}
+            <section class="treatment-charges">
+                <div class="settlement-header">Previous Pending Invoice Settlement</div>
+                <div class="info-strip">
+                    These are previous pending invoices settled today along with this invoice.
+                </div>
+            </section>
+            <div class="table-container">
+                <table class="charges-table">
+                    <thead>
+                        <tr>
+                            <th>Invoice ID</th>
+                            <th>Old Pending</th>
+                            <th>Paid Now</th>
+                            <th>Remaining</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in settled_rows %}
+                        <tr>
+                            <td class="text-center fw-bold">{{ row.invoice_id }}</td>
+                            <td class="text-center">$ {{ row.old_pending|round(2) }}</td>
+                            <td class="text-center">$ {{ row.paid_now|round(2) }}</td>
+                            <td class="text-center">$ {{ row.remaining|round(2) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+            <section class="summary-grid">
+                <div class="payment-details">
+                    <!-- Amount in words bar (pharmacy style) -->
+                    <div class="amount-in-words-bar">
+                        <span class="label">Amount in words:</span> {{ amount_in_words }}
+                    </div>
+                    <div class="payment-detail-row">
+                        <div class="payment-label">Transaction ID:</div>
+                        <div class="payment-value">{{ invoice.transaction_id if invoice.transaction_id else "-" }}</div>
+                    </div>
+                    <div class="payment-detail-row">
+                        <div class="payment-label">Payment Date:</div>
+                        <div class="payment-value">{{ invoice.payment_date if invoice.payment_date else "-" }}</div>
+                    </div>
+                    <div class="payment-detail-row">
+                        <div class="payment-label">Payment Status:</div>
+                        <div class="payment-value fw-bold">{{ invoice.status }}</div>
+                    </div>
+                    {% if payment_remarks %}
+                    <div class="payment-detail-row">
+                        <div class="payment-label">Remarks:</div>
+                        <div class="payment-value">{{ payment_remarks }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+                <div class="totals-box">
+                    <!-- SUBTOTAL CARD - PHARMACY PATIENT BOX STYLE -->
+                    <div class="totals-mini">
+                        <div class="totals-mini-header">Payment Summary</div>
+                        <div class="totals-mini-row">
+                            <span class="totals-mini-label">Subtotal</span>
+                            <span class="totals-mini-value">$ {{ (subtotal|default(0))|round(2) }}</span>
+                        </div>
+                        <div class="totals-mini-row">
+                            <span class="totals-mini-label">Discount ({{ (discount_percent|default(0))|round(2) }}%)</span>
+                            <span class="totals-mini-value">- $ {{ (discount_amount|default(0))|round(2) }}</span>
+                        </div>
+                        <div class="totals-mini-row">
+                            <span class="totals-mini-label">After Discount</span>
+                            <span class="totals-mini-value">$ {{ (tax_net_amount|default(0))|round(2) }}</span>
+                        </div>
+                        <div class="totals-divider"></div>
+                        <div class="totals-mini-row">
+                            <span class="totals-mini-label">Total Tax</span>
+                            <span class="totals-mini-value">$ {{ (total_tax|default(0))|round(2) }}</span>
+                        </div>
+                        <div class="totals-mini-row">
+                            <span class="totals-mini-label">CGST ({{ (cgst_percent|default(0))|round(2) }}%)</span>
+                            <span class="totals-mini-value">$ {{ (cgst_amount|default(0))|round(2) }}</span>
+                        </div>
+                        <div class="totals-mini-row">
+                            <span class="totals-mini-label">SGST ({{ (sgst_percent|default(0))|round(2) }}%)</span>
+                            <span class="totals-mini-value">$ {{ (sgst_amount|default(0))|round(2) }}</span>
+                        </div>
+                        {% if previous_pending_paid_today and previous_pending_paid_today > 0 %}
+                        <div class="settlement-row">
+                            <div class="totals-mini-row">
+                                <span class="totals-mini-label">Previous Pending Paid Today</span>
+                                <span class="totals-mini-value">$ {{ previous_pending_paid_today|round(2) }}</span>
+                            </div>
+                        </div>
+                        <div class="total-collected">
+                            <div class="totals-mini-row">
+                                <span class="totals-mini-label">Total Collected Today</span>
+                                <span class="totals-mini-value">$ {{ total_collected_today|round(2) }}</span>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="grand-total-row">
+                        <div class="grand-total-label">Grand total</div>
+                        <div class="grand-total-value">$ {{ (grand_total|default(0))|round(2) }}</div>
+                    </div>
+                    {% if is_partial_payment %}
+                    <div class="partial-summary">
+                        <div class="partial-summary-title">Partial Payment Summary</div>
+                        <div class="partial-summary-row">
+                            <span class="partial-summary-label">Amount Paid:</span>
+                            <span class="partial-summary-value paid-amount">$ {{ (paid_amount|default(0))|round(2) }}</span>
+                        </div>
+                        <div class="partial-summary-row">
+                            <span class="partial-summary-label">Balance Due:</span>
+                            <span class="partial-summary-value pending-amount">$ {{ (pending_amount|default(0))|round(2) }}</span>
+                        </div>
+                        <div class="partial-summary-row">
+                            <span class="partial-summary-label">Payment Progress:</span>
+                            <span class="partial-summary-value">{{ payment_progress|default(0) }}%</span>
+                        </div>
+                        {% if due_date %}
+                        <div class="partial-summary-row">
+                            <span class="partial-summary-label">Due Date:</span>
+                            <span class="partial-summary-value">{{ due_date }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+            <div class="static-bottom-details">
+                <div class="terms-container">
+                    <div class="terms-heading">Terms and Conditions</div>
+                    <ol class="terms-list">
+                        <li>All payments must be made in full at the time of discharge unless prior arrangements have been approved.</li>
+                        <li>For partial payments, remaining balance must be paid by the due date mentioned above.</li>
+                        <li>Late payments may incur additional charges as per hospital policy.</li>
+                        <li>The hospital is not responsible for insurance rejections or delays.</li>
+                    </ol>
+                </div>
+                <div class="signature-box">
+                    <img class="signature-logo" src="invoices_statics/signature_logo.png" alt="Authorized Signature" />
+                    <div class="signature-label">Authorized Signature</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="fixed-footer-container">
+        <div class="flower-decoration"></div>
+        <div class="footer-bar">
+            Generated on {{ today }} – Stacklycare hospital <br/>
+            {% if is_partial_payment %}
+            Partial Payment Invoice – Balance Due: $ {{ (pending_amount|default(0))|round(2) }}
+            {% else %}
+            Thank you for choosing Stacklycare. Wishing you speedy recovery
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
