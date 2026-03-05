@@ -20,7 +20,7 @@ pipeline {
 
     stages {
 
-         {
+        stage('Checkout Code') {
             steps {
                 git branch: "${BRANCH}", url: "${GIT_REPO}"
             }
