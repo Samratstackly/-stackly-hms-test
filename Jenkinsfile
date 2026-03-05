@@ -2,13 +2,13 @@ pipeline {
     agent any
 
     environment {
-        GIT_REPO = 'https://github.com/thestackly/stackly-hms.git'
+        GIT_REPO = 'https://github.com/Samratstackly/-stackly-hms-test.git'
         BRANCH = 'test'
         DEPLOY_USER = 'ubuntu'
         DEPLOY_HOST = '13.59.204.169'
         DEPLOY_SSH = 'hms-test-automation-key'
 
-        REMOTE_BASE = '/home/ubuntu/stackly-hms'
+        REMOTE_BASE = '/home/ubuntu/-stackly-hms-test'
         FRONTEND_DIR = "${REMOTE_BASE}/hms_frontend"
         FASTAPI_DIR = "${REMOTE_BASE}/Fastapi_app"
         FRONTEND_BUILD = 'dist'
