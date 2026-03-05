@@ -8,7 +8,7 @@ pipeline {
 
         DEPLOY_USER = 'ubuntu'
         DEPLOY_HOST = '13.59.204.169'
-        DEPLOY_SSH  = 'hms-test-automation-key'
+        DEPLOY_SSH  = 'ubuntu'
 
         REMOTE_BASE = '/home/ubuntu/-stackly-hms-test'
         FRONTEND_DIR = '/home/ubuntu/-stackly-hms-test/hms_frontend'
@@ -20,23 +20,18 @@ pipeline {
 
     stages {
 
-        /* ================= CHECKOUT ================= */
-
         stage('Checkout Code') {
             steps {
                 git branch: "${BRANCH}", url: "${GIT_REPO}"
             }
         }
 
-        /* ================= DEPLOY TO EC2 ================= */
-
         stage('Deploy to EC2') {
             steps {
 
                 sshagent(credentials: ["${DEPLOY_SSH}"]) {
 
-                    sh """
-
+                    sh '''
                     echo "Creating project directory on EC2"
 
                     ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} \
@@ -51,25 +46,20 @@ pipeline {
                     --exclude='__pycache__' \
                     -e "ssh -o StrictHostKeyChecking=no" \
                     ./ ${DEPLOY_USER}@${DEPLOY_HOST}:${REMOTE_BASE}
-
-                    """
+                    '''
                 }
             }
         }
-
-        /* ================= BACKEND SETUP ================= */
 
         stage('Backend Setup') {
             steps {
 
                 sshagent(credentials: ["${DEPLOY_SSH}"]) {
 
-                    sh """
-
+                    sh '''
                     ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} << EOF
 
                     set -e
-
                     cd ${REMOTE_BASE}
 
                     echo "Setting up Python environment"
@@ -86,20 +76,17 @@ pipeline {
                     python manage.py migrate
 
                     EOF
-                    """
+                    '''
                 }
             }
         }
-
-        /* ================= DEPLOY FRONTEND ================= */
 
         stage('Deploy Frontend') {
             steps {
 
                 sshagent(credentials: ["${DEPLOY_SSH}"]) {
 
-                    sh """
-
+                    sh '''
                     ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} << EOF
 
                     set -e
@@ -114,20 +101,17 @@ pipeline {
                     sudo chown -R www-data:www-data /var/www/html/
 
                     EOF
-                    """
+                    '''
                 }
             }
         }
-
-        /* ================= RESTART SERVICES ================= */
 
         stage('Restart Services') {
             steps {
 
                 sshagent(credentials: ["${DEPLOY_SSH}"]) {
 
-                    sh """
-
+                    sh '''
                     ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} << EOF
 
                     echo "Restarting services"
@@ -139,7 +123,7 @@ pipeline {
                     echo "Deployment completed"
 
                     EOF
-                    """
+                    '''
                 }
             }
         }
@@ -148,7 +132,6 @@ pipeline {
     post {
 
         success {
-
             emailext(
                 subject: "HMS Deployment SUCCESS - ${DEPLOY_HOST}",
                 to: "${EMAIL_RECIPIENTS}",
@@ -166,7 +149,6 @@ Time: ${new Date()}
         }
 
         failure {
-
             emailext(
                 subject: "HMS Deployment FAILED - ${DEPLOY_HOST}",
                 to: "${EMAIL_RECIPIENTS}",
