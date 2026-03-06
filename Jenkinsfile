@@ -28,7 +28,7 @@ pipeline {
 
         stage('Deploy to EC2') {
             steps {
-                sshagent(credentials: ['ec2-key']) {
+                sshagent(credentials: ['hms-key']) {
                     sh """
                     echo "Creating project directory on EC2"
 
@@ -52,7 +52,7 @@ pipeline {
 
         stage('Backend Setup') {
             steps {
-                sshagent(credentials: ['ec2-key']) {
+                sshagent(credentials: ['hms-key']) {
                     sh """
                     ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} << EOF
 
@@ -81,7 +81,7 @@ pipeline {
 
         stage('Deploy Frontend') {
             steps {
-                sshagent(credentials: ['ec2-key']) {
+                sshagent(credentials: ['hms-key']) {
                     sh """
                     ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} << EOF
 
@@ -104,7 +104,7 @@ pipeline {
 
         stage('Restart Services') {
             steps {
-                sshagent(credentials: ['ec2-key']) {
+                sshagent(credentials: ['hms-key']) {
                     sh """
                     ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} << EOF
 
