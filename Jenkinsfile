@@ -6,7 +6,7 @@ pipeline {
         BRANCH   = 'test'
 
         DEPLOY_USER = 'ubuntu'
-        DEPLOY_HOST = '13.59.204.169'
+        DEPLOY_HOST = '13.203.195.129'
         DEPLOY_SSH  = 'hms-new-key'
 
         REMOTE_BASE = '/home/ubuntu/-stackly-hms-test'
