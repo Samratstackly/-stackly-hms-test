@@ -54,7 +54,6 @@ stages {
             sshagent(["${DEPLOY_SSH}"]) {
                 sh """
                 ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} << 'EOF'
-
                 set -e
 
                 cd ${FASTAPI_DIR}
@@ -68,7 +67,6 @@ stages {
                 pip install -r requirement.txt
 
                 echo "Backend dependencies installed"
-
                 EOF
                 """
             }
@@ -80,7 +78,6 @@ stages {
             sshagent(["${DEPLOY_SSH}"]) {
                 sh """
                 ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} << 'EOF'
-
                 set -e
 
                 echo "Deploying frontend"
@@ -91,7 +88,6 @@ stages {
                 sudo cp -r ${FRONTEND_BUILD}/* /var/www/html/
 
                 sudo chown -R www-data:www-data /var/www/html/
-
                 EOF
                 """
             }
@@ -111,7 +107,6 @@ stages {
                 sudo systemctl restart fastapi.service
 
                 echo "Deployment completed"
-
                 EOF
                 """
             }
