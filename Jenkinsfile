@@ -34,8 +34,6 @@ stages {
 
                 ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} "mkdir -p ${REMOTE_BASE}"
 
-                echo "Copying project files"
-
                 rsync -avz --delete \
                 --exclude='.git' \
                 --exclude='venv' \
@@ -48,57 +46,20 @@ stages {
         }
     }
 
-    stage('Setup Backend') {
-        steps {
-            sshagent(["${DEPLOY_SSH}"]) {
-                sh '''
-                ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} << EOF
-
-                set -e
-
-                cd ${FASTAPI_DIR}
-
-                echo "Creating Python virtual environment"
-                python3 -m venv venv
-
-                source venv/bin/activate
-
-                echo "Installing Python dependencies"
-                pip install --upgrade pip
-                pip install -r requirement.txt
-
-                EOF
-                '''
-            }
-        }
-    }
-
-    stage('Deploy Frontend') {
-        steps {
-            sshagent(["${DEPLOY_SSH}"]) {
-                sh '''
-                ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} << EOF
-
-                set -e
-
-                cd ${FRONTEND_DIR}
-
-                echo "Deploying frontend to nginx"
-
-                sudo rm -rf /var/www/html/*
-                sudo cp -r ${FRONTEND_BUILD}/* /var/www/html/
-
-                sudo chown -R www-data:www-data /var/www/html/
-
-                EOF
-                '''
-            }
-        }
-    }
-
     stage('Restart Services') {
         steps {
             sshagent(["${DEPLOY_SSH}"]) {
                 sh '''
-                ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} << EOF
+                ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} "
+                sudo systemctl daemon-reload
+                sudo systemctl restart nginx
+                sudo systemctl restart fastapi.service
+                "
+                '''
+            }
+        }
+    }
+}
 ```
+
+}
