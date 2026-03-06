@@ -25,9 +25,13 @@ pipeline {
 
         stage('Deploy Code to EC2') {
             steps {
-                sshagent(["$hms-new-key"]) {
+                sshagent(["${DEPLOY_SSH}"]) {
                     sh '''
+                    echo "Creating project directory on EC2"
+
                     ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} "mkdir -p ${REMOTE_BASE}"
+
+                    echo "Syncing project files"
 
                     rsync -avz --delete \
                     --exclude='.git' \
@@ -45,7 +49,10 @@ pipeline {
             steps {
                 sshagent(["${DEPLOY_SSH}"]) {
                     sh '''
+                    echo "Restarting services on EC2"
+
                     ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} "
+                    sudo systemctl daemon-reload
                     sudo systemctl restart nginx
                     sudo systemctl restart fastapi.service
                     "
@@ -53,5 +60,6 @@ pipeline {
                 }
             }
         }
+
     }
 }
