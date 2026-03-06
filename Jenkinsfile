@@ -3,7 +3,6 @@ agent any
 
 ```
 environment {
-
     GIT_REPO = 'https://github.com/Samratstackly/-stackly-hms-test.git'
     BRANCH   = 'test'
 
@@ -31,15 +30,14 @@ stages {
         steps {
             sshagent(["${DEPLOY_SSH}"]) {
                 sh """
+                set -e
                 echo "Creating project directory on EC2"
 
-                ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} \
-                "mkdir -p ${REMOTE_BASE}"
+                ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} "mkdir -p ${REMOTE_BASE}"
 
-                echo "Syncing project files"
+                echo "Syncing project files to server"
 
-                rsync -avz \
-                --delete \
+                rsync -avz --delete \
                 --exclude='.git' \
                 --exclude='venv' \
                 --exclude='node_modules' \
@@ -51,7 +49,7 @@ stages {
         }
     }
 
-    stage('Backend Setup (FastAPI)') {
+    stage('Backend Setup') {
         steps {
             sshagent(["${DEPLOY_SSH}"]) {
                 sh """
@@ -77,30 +75,6 @@ stages {
         }
     }
 
-    stage('Build Frontend') {
-        steps {
-            sshagent(["${DEPLOY_SSH}"]) {
-                sh """
-                ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} << 'EOF'
-
-                set -e
-
-                cd ${FRONTEND_DIR}
-
-                echo "Installing frontend dependencies"
-
-                npm install
-
-                echo "Building frontend"
-
-                npm run build
-
-                EOF
-                """
-            }
-        }
-    }
-
     stage('Deploy Frontend') {
         steps {
             sshagent(["${DEPLOY_SSH}"]) {
@@ -109,10 +83,12 @@ stages {
 
                 set -e
 
-                echo "Deploying frontend to Nginx"
+                echo "Deploying frontend"
+
+                cd ${FRONTEND_DIR}
 
                 sudo rm -rf /var/www/html/*
-                sudo cp -r ${FRONTEND_DIR}/${FRONTEND_BUILD}/* /var/www/html/
+                sudo cp -r ${FRONTEND_BUILD}/* /var/www/html/
 
                 sudo chown -R www-data:www-data /var/www/html/
 
@@ -134,7 +110,7 @@ stages {
                 sudo systemctl restart nginx
                 sudo systemctl restart fastapi.service
 
-                echo "Deployment completed successfully"
+                echo "Deployment completed"
 
                 EOF
                 """
@@ -144,7 +120,6 @@ stages {
 }
 
 post {
-
     success {
         emailext(
             subject: "HMS Deployment SUCCESS - ${DEPLOY_HOST}",
