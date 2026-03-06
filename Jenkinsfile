@@ -15,7 +15,7 @@ environment {
     FASTAPI_DIR  = '/home/ubuntu/-stackly-hms-test/Fastapi_app'
     FRONTEND_BUILD = 'dist'
 
-    EMAIL_RECIPIENTS = 'awsdevops@thestackly.com, pavanb@thestackly.com'
+    EMAIL_RECIPIENTS = 'awsdevops@thestackly.com,pavanb@thestackly.com'
 }
 
 stages {
@@ -29,13 +29,12 @@ stages {
     stage('Deploy Code to EC2') {
         steps {
             sshagent(["${DEPLOY_SSH}"]) {
-                sh """
-                set -e
+                sh '''
                 echo "Creating project directory on EC2"
 
                 ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} "mkdir -p ${REMOTE_BASE}"
 
-                echo "Syncing project files to server"
+                echo "Copying project files"
 
                 rsync -avz --delete \
                 --exclude='.git' \
@@ -44,31 +43,32 @@ stages {
                 --exclude='__pycache__' \
                 -e "ssh -o StrictHostKeyChecking=no" \
                 ./ ${DEPLOY_USER}@${DEPLOY_HOST}:${REMOTE_BASE}
-                """
+                '''
             }
         }
     }
 
-    stage('Backend Setup') {
+    stage('Setup Backend') {
         steps {
             sshagent(["${DEPLOY_SSH}"]) {
-                sh """
-                ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} << 'EOF'
+                sh '''
+                ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} << EOF
+
                 set -e
 
                 cd ${FASTAPI_DIR}
 
-                echo "Setting up Python virtual environment"
-
+                echo "Creating Python virtual environment"
                 python3 -m venv venv
+
                 source venv/bin/activate
 
+                echo "Installing Python dependencies"
                 pip install --upgrade pip
                 pip install -r requirement.txt
 
-                echo "Backend dependencies installed"
                 EOF
-                """
+                '''
             }
         }
     }
@@ -76,20 +76,22 @@ stages {
     stage('Deploy Frontend') {
         steps {
             sshagent(["${DEPLOY_SSH}"]) {
-                sh """
-                ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} << 'EOF'
+                sh '''
+                ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} << EOF
+
                 set -e
 
-                echo "Deploying frontend"
-
                 cd ${FRONTEND_DIR}
+
+                echo "Deploying frontend to nginx"
 
                 sudo rm -rf /var/www/html/*
                 sudo cp -r ${FRONTEND_BUILD}/* /var/www/html/
 
                 sudo chown -R www-data:www-data /var/www/html/
+
                 EOF
-                """
+                '''
             }
         }
     }
@@ -97,61 +99,6 @@ stages {
     stage('Restart Services') {
         steps {
             sshagent(["${DEPLOY_SSH}"]) {
-                sh """
-                ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} << 'EOF'
-
-                echo "Restarting services"
-
-                sudo systemctl daemon-reload
-                sudo systemctl restart nginx
-                sudo systemctl restart fastapi.service
-
-                echo "Deployment completed"
-                EOF
-                """
-            }
-        }
-    }
-}
-
-post {
-    success {
-        emailext(
-            subject: "HMS Deployment SUCCESS - ${DEPLOY_HOST}",
-            to: "${EMAIL_RECIPIENTS}",
-            body: """
+                sh '''
+                ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} << EOF
 ```
-
-Deployment Successful
-
-Server: ${DEPLOY_HOST}
-Branch: ${BRANCH}
-
-Services restarted successfully.
-
-Time: ${new Date()}
-"""
-)
-}
-
-```
-    failure {
-        emailext(
-            subject: "HMS Deployment FAILED - ${DEPLOY_HOST}",
-            to: "${EMAIL_RECIPIENTS}",
-            body: """
-```
-
-Deployment Failed
-
-Server: ${DEPLOY_HOST}
-Branch: ${BRANCH}
-
-Check Jenkins console logs.
-
-Time: ${new Date()}
-"""
-)
-}
-}
-}
