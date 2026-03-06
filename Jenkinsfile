@@ -25,7 +25,7 @@ pipeline {
 
         stage('Deploy Code to EC2') {
             steps {
-                sshagent(["${DEPLOY_SSH}"]) {
+                sshagent(["$hms-new-key"]) {
                     sh '''
                     ssh -o StrictHostKeyChecking=no ${DEPLOY_USER}@${DEPLOY_HOST} "mkdir -p ${REMOTE_BASE}"
 
